@@ -6,6 +6,9 @@ public class PlayerInput : MonoBehaviour {
 
 	Player player;
 
+	//ControlMapping
+	KeyCode jumpButton = KeyCode.Space;
+
 	void Start () {
 		player = GetComponent<Player> ();
 	}
@@ -14,13 +17,13 @@ public class PlayerInput : MonoBehaviour {
 		Vector2 directionalInput = new Vector2 (Input.GetAxisRaw ("Horizontal"), Input.GetAxisRaw ("Vertical"));
 		player.SetDirectionalInput (directionalInput);
 
-		if (Input.GetKeyDown (KeyCode.Space)) {
+		if (Input.GetKeyDown (jumpButton)) {
 			player.OnJumpInputDown ();
 		}
-		if (Input.GetKey (KeyCode.Space)) {
+		if (Input.GetKey (jumpButton)) {
 			player.OnJumpInputHold ();
 		}
-		if (Input.GetKeyUp (KeyCode.Space)) {
+		if (Input.GetKeyUp (jumpButton)) {
 			player.OnJumpInputUp ();
 		}
 	}

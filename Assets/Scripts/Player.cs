@@ -8,16 +8,17 @@ public class Player : MonoBehaviour {
 	public float maxJumpHeight = 4;
 	public float minJumpHeight = 1;
 	public float timeToJumpApex = .4f;
-	float maxJumpVelocity;
-	float minJumpVelocity;
-	float jumpCharge;
+	public float maxJumpVelocity;
+	public float minJumpVelocity;
+	public float jumpCharge;
 	Vector2 jumpDirection;
+	bool isChargingJump = false;
 
 
 	//Variables pertaining to Player velocity and acceleration
-	float accelerationTimeAirborne = 5f;
-	float accelerationTimeGrounded = 0.5f;
-	float moveSpeed = 0.7f;
+	float accelerationTimeAirborne = 2;
+	float accelerationTimeGrounded = 0.4f;
+	float moveSpeed = 0.2f;
 	float gravity;
 	Vector3 velocity;
 	float velocityXSmoothing;
@@ -32,7 +33,7 @@ public class Player : MonoBehaviour {
 	float timeToWallUnstick;
 
 
-	//Variables pertaining to input from other scripts
+	//Variables pertaining to I/O from other scripts
 	Controller2D controller;
 	Vector2 directionalInput;
 
@@ -49,7 +50,9 @@ public class Player : MonoBehaviour {
 	void Update() {
 		//Update the player's velocity and move the player based on directionalInput
 		CalculateVelocity ();
-		controller.Move (velocity * Time.deltaTime, directionalInput);
+
+			controller.Move (velocity * Time.deltaTime, directionalInput);
+		
 
 		if (controller.collisions.above || controller.collisions.below) {
 			if (controller.collisions.slidingDownMaxSlope) {
@@ -58,28 +61,37 @@ public class Player : MonoBehaviour {
 				velocity.y = 0;
 			}
 		}
-	}
 
-	public void SetDirectionalInput (Vector2 input) {
-		directionalInput = input;
+		if (controller.collisions.right || controller.collisions.left) {
+			velocity.x = 0;
+		}
 	}
 
 	public void OnJumpInputDown() {
-
+		jumpDirection = Vector2.up;
 		jumpCharge = minJumpVelocity;
 	}
 
 	public void OnJumpInputHold() {
-		Debug.Log(jumpCharge);
-		SetDirectionalInput (Vector2.zero);
-		if (jumpCharge < maxJumpVelocity){
-			jumpCharge += Time.deltaTime*1f;
-		} else {
-			jumpCharge = maxJumpVelocity;
-		}
 
+			isChargingJump = true;
+			Debug.Log(jumpCharge);
+			
+			//Modify Jumping Direction based on left or right input
+			jumpDirection.x += directionalInput.x  * Time.deltaTime;
+			Debug.DrawRay(this.transform.position, jumpDirection * 2f,Color.red);
+			//Charge the jump, or keep it at maxJumpVelocity
+			if (jumpCharge < maxJumpVelocity){
+				jumpCharge += Time.deltaTime*1f;
+			} else {
+				jumpCharge = maxJumpVelocity;
+			}
+
+			//You do not walk while holding jump
+			SetDirectionalInput (Vector2.zero);
 	}
 	public void OnJumpInputUp() {
+		isChargingJump = false;
 		if (controller.collisions.below) {
 			if (controller.collisions.slidingDownMaxSlope) {
 				if (directionalInput.x != -Mathf.Sign (controller.collisions.slopeNormal.x)) { // not jumping against max slope
@@ -87,16 +99,20 @@ public class Player : MonoBehaviour {
 					velocity.x = jumpCharge * controller.collisions.slopeNormal.x;
 				}
 			} else {
-				velocity.y = jumpCharge;
-				velocity.x = jumpCharge * directionalInput.x;
+				velocity = new Vector2(jumpDirection.normalized.x * jumpCharge, jumpDirection.normalized.y * jumpCharge);
 			}
 		}
+		jumpCharge = minJumpVelocity;
 	}
 		
-
+	public void SetDirectionalInput (Vector2 input) {
+		directionalInput = input;
+	}
 	void CalculateVelocity() {
-		float targetVelocityX = directionalInput.x * moveSpeed;
-		velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (controller.collisions.below)?accelerationTimeGrounded:accelerationTimeAirborne);
+		if(controller.collisions.below){
+			float targetVelocityX = directionalInput.x * moveSpeed;
+			velocity.x = Mathf.SmoothDamp (velocity.x, targetVelocityX, ref velocityXSmoothing, (directionalInput.x == 0)?accelerationTimeGrounded:accelerationTimeAirborne);
+		}
 		velocity.y += gravity * Time.deltaTime;
 	}
 }
