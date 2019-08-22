@@ -36,6 +36,7 @@ public class Player : MonoBehaviour {
 	//Variables pertaining to I/O from other scripts
 	Controller2D controller;
 	Vector2 directionalInput;
+	Mech myMech;
 
 	void Start() {
 		//Assign the controller component of the player
@@ -103,6 +104,23 @@ public class Player : MonoBehaviour {
 			}
 		}
 		jumpCharge = minJumpVelocity;
+	}
+
+	public void onAbility1InputDown() {
+		myMech.OnAbility1Trigger ();
+
+	}
+
+	public void onAbility2InputDown() {
+		myMech.OnAbility2Trigger ();
+	}
+
+	public void onAbility3InputDown() {
+		myMech.OnAbility3Trigger ();
+	}
+
+	public void onAbility4InputDown() {
+		myMech.OnAbility4Trigger ();
 	}
 		
 	public void SetDirectionalInput (Vector2 input) {
